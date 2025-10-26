@@ -21,7 +21,13 @@ if ($null -eq $choco) {
     return
 }
 
+"Preconfig: enabling Chocolatey global confirmation" | Tee-Object -FilePath $log -Append | Out-Null
 choco feature enable -n=allowGlobalConfirmation *>&1 | Tee-Object -FilePath $log -Append
+
+"Precheck: checking for outdated packages" | Tee-Object -FilePath $log -Append | Out-Null
 choco outdated *>&1 | Tee-Object -FilePath $log -Append
+
+"Starting Chocolatey upgrades" | Tee-Object -FilePath $log -Append | Out-Null
 choco upgrade all -y --no-progress *>&1 | Tee-Object -FilePath $log -Append
 
+"Completed Chocolatey updates at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null

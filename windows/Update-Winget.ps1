@@ -16,6 +16,7 @@ $log = Join-Path $LogFolder ('winget-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.
 
 
 try {
+    "Preconfig: updating winget sources" | Tee-Object -FilePath $log -Append | Out-Null
     winget source update --disable-interactivity *>&1 |
         Tee-Object -FilePath $log -Append
 } catch {
@@ -24,5 +25,7 @@ try {
         Tee-Object -FilePath $log -Append | Out-Null
 }
 
+"Starting winget upgrades" | Tee-Object -FilePath $log -Append | Out-Null
 winget upgrade --all --silent --disable-interactivity *>&1 |
     Tee-Object -FilePath $log -Append
+"Completed winget updates at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null
