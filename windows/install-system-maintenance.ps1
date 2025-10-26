@@ -54,17 +54,27 @@ $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccou
 $settings  = New-ScheduledTaskSettingsSet -Compatibility Win8 -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
 Write-Host 'Registering scheduled task: Cleanup Disk'
-$cleanupInner = "Set-Location -Path 'C:\Scheduled'; & 'C:\Scheduled\cleanup-disk.ps1'"
-$cleanupCmd = ('-NoProfile -ExecutionPolicy Bypass -Command "{0}"' -f $cleanupInner)
-$cleanupAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $cleanupCmd
+$cleanupArgs = '-NoProfile -ExecutionPolicy Bypass -File "C:\Scheduled\cleanup-disk.ps1"'
+$cleanupAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $cleanupArgs
+$cleanupAction.WorkingDirectory = $destRoot
 $cleanupTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '6:00 PM'
-Register-ScheduledTask -TaskName 'Cleanup Disk' -TaskPath $taskPath -Action $cleanupAction -Trigger $cleanupTrigger -Principal $principal -Settings $settings -Description 'Cleans up disk space' -Force | Out-Null
+$cleanupTask = New-ScheduledTask -Action $cleanupAction -Trigger $cleanupTrigger -Principal $principal -Settings $settings -Description 'Cleans up disk space'
+Register-ScheduledTask -TaskName 'Cleanup Disk' -TaskPath $taskPath -InputObject $cleanupTask -Force | Out-Null
 
 Write-Host 'Registering scheduled task: Update Apps'
-$updateInner = "Set-Location -Path 'C:\Scheduled'; & 'C:\Scheduled\update-apps.ps1'"
-$updateCmd = ('-NoProfile -ExecutionPolicy Bypass -Command "{0}"' -f $updateInner)
-$updateAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $updateCmd
+$updateArgs = '-NoProfile -ExecutionPolicy Bypass -File "C:\Scheduled\update-apps.ps1"'
+$updateAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $updateArgs
+$updateAction.WorkingDirectory = $destRoot
 $updateTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '8:00 AM'
-Register-ScheduledTask -TaskName 'Update Apps' -TaskPath $taskPath -Action $updateAction -Trigger $updateTrigger -Principal $principal -Settings $settings -Description 'Updates installed applications' -Force | Out-Null
+$updateTask = New-ScheduledTask -Action $updateAction -Trigger $updateTrigger -Principal $principal -Settings $settings -Description 'Updates installed applications'
+Register-ScheduledTask -TaskName 'Update Apps' -TaskPath $taskPath -InputObject $updateTask -Force | Out-Null
 
 Write-Host 'Done. Tasks created under Task Scheduler folder: System Maintenance'
+
+# Quick verification of Start In (WorkingDirectory)
+Get-ScheduledTask -TaskPath $taskPath -TaskName 'Cleanup Disk','Update Apps' |
+  ForEach-Object {
+    $def = $_ | Get-ScheduledTaskInfo | Out-Null; $name = $_.TaskName
+    $action = ($_.Actions | Where-Object { $_.Execute -like '*powershell.exe' } | Select-Object -First 1)
+    if ($action) { Write-Host ("{0} Start In: {1}" -f $name, $action.WorkingDirectory) }
+  }
