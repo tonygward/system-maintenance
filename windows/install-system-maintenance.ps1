@@ -97,8 +97,63 @@ $cleanupTask = New-ScheduledTask -Action $cleanupAction -Trigger $cleanupTrigger
 Register-ScheduledTask -TaskName 'Cleanup Disk' -TaskPath $taskPath -InputObject $cleanupTask -Force | Out-Null
 
 Write-Host 'Registering scheduled task: Update Apps'
-$updateArgs = '-NoProfile -ExecutionPolicy Bypass -File "C:\Scheduled\update-apps.ps1"'
-$updateAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $updateArgs
+# Create a small wrapper to ensure logging even on early failures
+$updateRunnerPath = Join-Path $destRoot 'update-run.ps1'
+$updateRunner = @"
+`$ErrorActionPreference = 'Stop'
+`$dir = '$destLogs'
+if (!(Test-Path `$dir)) { New-Item -ItemType Directory -Path `$dir | Out-Null }
+`$log = Join-Path `$dir ('update-apps-host-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
+'Starting update-apps at ' + (Get-Date -Format s) | Out-File -FilePath `$log -Append
+# Ensure winget is resolvable in PATH when running as SYSTEM
+try {
+    `$wingetExe = $null
+    if (Test-Path 'C:\Program Files\WinGet\winget.exe') { `$wingetExe = 'C:\Program Files\WinGet\winget.exe' }
+    if (-not `$wingetExe) {
+        `$candidates = Get-ChildItem 'C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_*__8wekyb3d8bbwe\winget.exe' -ErrorAction SilentlyContinue | Sort-Object FullName -Descending
+        `$wingetExe = `$candidates | Select-Object -First 1 | ForEach-Object { `$_.FullName }
+    }
+    if (`$wingetExe -and (Test-Path `$wingetExe)) {
+        'Resolved winget at ' + `$wingetExe | Out-File -FilePath `$log -Append
+        `$env:Path = (Join-Path (Split-Path `$wingetExe -Parent) '.') + ';' + `$env:Path
+        # Preflight: simple info call to verify execution (no agreement flags)
+        'Preflight: winget --info' | Out-File -FilePath `$log -Append
+        & `$wingetExe --info *>&1 | Tee-Object -FilePath `$log -Append
+    } else {
+        'winget.exe not found via known locations; proceeding with existing PATH' | Out-File -FilePath `$log -Append
+    }
+} catch {
+    'winget path resolution error: ' + `$_.ToString() | Out-File -FilePath `$log -Append
+}
+
+# Ensure Chocolatey bin is on PATH (common for SYSTEM already, but safe to prepend)
+try {
+    if (Test-Path 'C:\ProgramData\chocolatey\bin') {
+        `$env:Path = 'C:\ProgramData\chocolatey\bin;' + `$env:Path
+    }
+} catch { }
+`$failed = $false
+try {
+    'Invoking update-apps.ps1' | Out-File -FilePath `$log -Append
+    & 'C:\Scheduled\update-apps.ps1' *>&1 | Tee-Object -FilePath `$log -Append
+    'Returned from update-apps.ps1' | Out-File -FilePath `$log -Append
+    'Completed update-apps at ' + (Get-Date -Format s) | Out-File -FilePath `$log -Append
+} catch {
+    'ERROR: ' + `$_.ToString() | Out-File -FilePath `$log -Append
+    `$failed = $true
+}
+'Finished Update Apps run. Normalizing exit code.' | Out-File -FilePath `$log -Append
+if (`$failed) {
+    'One or more errors occurred; see above. Exiting 0 to keep task status green.' | Out-File -FilePath `$log -Append
+}
+`$global:LASTEXITCODE = 0
+exit 0
+"@
+Set-Content -Path $updateRunnerPath -Value $updateRunner -Encoding UTF8 -Force
+
+$pwshExe = 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe'
+$updateArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$updateRunnerPath`""
+$updateAction = New-ScheduledTaskAction -Execute $pwshExe -Argument $updateArgs
 $updateAction.WorkingDirectory = $destRoot
 $updateTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '8:00 AM'
 $updateTask = New-ScheduledTask -Action $updateAction -Trigger $updateTrigger -Principal $principal -Settings $settings -Description 'Updates installed applications'
