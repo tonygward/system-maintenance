@@ -9,6 +9,10 @@ Both tasks run under the SYSTEM account from `C:\Scheduled`.
 **Install**
 - Run from an elevated PowerShell prompt:
   - `powershell -ExecutionPolicy Bypass -File windows\install-system-maintenance.ps1`
+
+<hr>
+
+## Technical Details
 - What the installer does:
   - Creates `C:\Scheduled` and `C:\Scheduled\logs` (if missing)
   - Copies `windows\cleanup-disk.ps1` and `windows\update-apps.ps1` to `C:\Scheduled` (overwrite)
