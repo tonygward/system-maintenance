@@ -54,7 +54,20 @@ $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccou
 $settings  = New-ScheduledTaskSettingsSet -Compatibility Win8 -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
 Write-Host 'Registering scheduled task: Cleanup Disk'
-$cleanupArgs = '-NoProfile -ExecutionPolicy Bypass -File "C:\Scheduled\cleanup-disk.ps1"'
+# Use non-interactive cleanmgr sagerun with a small wrapper script to avoid quoting issues
+$cleanupRunnerPath = Join-Path $destRoot 'cleanup-run.ps1'
+$cleanupRunner = @"
+`$ErrorActionPreference = 'Stop'
+`$dir = '$destLogs'
+if (!(Test-Path `$dir)) { New-Item -ItemType Directory -Path `$dir | Out-Null }
+`$log = Join-Path `$dir ('cleanmgr-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
+'Starting cleanmgr /sagerun:1 at ' + (Get-Date -Format s) | Out-File -FilePath `$log -Append
+`$p = Start-Process -FilePath 'cleanmgr.exe' -ArgumentList '/sagerun:1' -PassThru -Wait
+'Completed with exit code ' + `$p.ExitCode | Out-File -FilePath `$log -Append
+"@
+Set-Content -Path $cleanupRunnerPath -Value $cleanupRunner -Encoding UTF8 -Force
+
+$cleanupArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$cleanupRunnerPath`""
 $cleanupAction = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $cleanupArgs
 $cleanupAction.WorkingDirectory = $destRoot
 $cleanupTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '6:00 PM'
