@@ -170,8 +170,8 @@ try {
         `$wgLog = Join-Path `$dir ('winget-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
         'Running: winget source update' | Out-File -FilePath `$log -Append
         & `$wingetExe source update --disable-interactivity *>&1 | Tee-Object -FilePath `$wgLog -Append | Tee-Object -FilePath `$log -Append
-        'Running: winget upgrade --all --silent (accepting agreements)' | Out-File -FilePath `$log -Append
-        & `$wingetExe --accept-source-agreements --accept-package-agreements --disable-interactivity upgrade --all --silent *>&1 | Tee-Object -FilePath `$wgLog -Append | Tee-Object -FilePath `$log -Append
+        'Running: winget upgrade --all --silent' | Out-File -FilePath `$log -Append
+        & `$wingetExe upgrade --all --silent --disable-interactivity *>&1 | Tee-Object -FilePath `$wgLog -Append | Tee-Object -FilePath `$log -Append
     } else {
         'Skipping winget: executable not resolved.' | Out-File -FilePath `$log -Append
     }
