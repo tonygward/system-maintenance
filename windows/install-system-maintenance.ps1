@@ -13,6 +13,28 @@ function Assert-Admin {
 
 Assert-Admin
 
+function Test-CleanMgrSageSetConfigured {
+    param(
+        [int]$SetNumber = 1
+    )
+    $id = ('{0:D4}' -f $SetNumber)
+    $vcKey = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches'
+    $configured = $false
+    if (Test-Path $vcKey) {
+        foreach ($sub in (Get-ChildItem -Path $vcKey -ErrorAction SilentlyContinue)) {
+            try {
+                $props = Get-ItemProperty -LiteralPath $sub.PSPath -ErrorAction Stop
+                $name = "StateFlags$id"
+                if ($props.PSObject.Properties.Name -contains $name) {
+                    $val = $props.$name
+                    if ($null -ne $val -and [int]$val -ne 0) { $configured = $true; break }
+                }
+            } catch { }
+        }
+    }
+    return $configured
+}
+
 $destRoot = 'C:\Scheduled'
 $destLogs = Join-Path $destRoot 'logs'
 
@@ -83,6 +105,11 @@ $updateTask = New-ScheduledTask -Action $updateAction -Trigger $updateTrigger -P
 Register-ScheduledTask -TaskName 'Update Apps' -TaskPath $taskPath -InputObject $updateTask -Force | Out-Null
 
 Write-Host 'Done. Tasks created under Task Scheduler folder: System Maintenance'
+
+# Warn if sageset for cleanmgr is not configured for set 1
+if (-not (Test-CleanMgrSageSetConfigured -SetNumber 1)) {
+    Write-Warning "Disk Cleanup sageset 1 appears unconfigured. Run 'cleanmgr.exe /sageset:1' interactively to choose cleanup categories; otherwise /sagerun:1 may perform no actions."
+}
 
 # Quick verification of Start In (WorkingDirectory)
 Get-ScheduledTask -TaskPath $taskPath -TaskName 'Cleanup Disk','Update Apps' |
