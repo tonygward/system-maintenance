@@ -14,7 +14,6 @@ if (!(Test-Path -LiteralPath $LogFolder)) {
 $log = Join-Path $LogFolder ('winget-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
 "Starting winget at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null
 
-
 try {
     "Preconfig: updating winget sources" | Tee-Object -FilePath $log -Append | Out-Null
     winget source update --disable-interactivity *>&1 |

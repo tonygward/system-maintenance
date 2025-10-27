@@ -17,5 +17,5 @@ if (!(Test-Path -LiteralPath $LogFolder)) {
     New-Item -ItemType Directory -Path $LogFolder | Out-Null
 }
 
-& (Join-Path $PSScriptRoot 'Update-Winget.ps1') -LogFolder $LogFolder
 & (Join-Path $PSScriptRoot 'Update-Choco.ps1') -LogFolder $LogFolder
+& (Join-Path $PSScriptRoot 'Update-Winget.ps1') -LogFolder $LogFolder
