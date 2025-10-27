@@ -11,19 +11,20 @@ if (!(Test-Path -LiteralPath $LogFolder)) {
 }
 
 $log = Join-Path $LogFolder ('update-apps-winget-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
-"Starting winget at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null
+. (Join-Path $PSScriptRoot 'Write-Log.ps1')
+Set-LogFile -Path $log
+Write-Log "Starting winget"
 
 try {
-    "Preconfig: updating winget sources" | Tee-Object -FilePath $log -Append | Out-Null
+    Write-Log "Preconfig: updating winget sources"
     winget source update --disable-interactivity *>&1 |
         Tee-Object -FilePath $log -Append
 } catch {
     # If agreements are required for msstore, log and continue with winget-only upgrade
-    "winget source update failed: $($_.Exception.Message). Continuing with upgrades from 'winget' source only." |
-        Tee-Object -FilePath $log -Append | Out-Null
+    Write-Log "winget source update failed: $($_.Exception.Message). Continuing with upgrades from 'winget' source only."
 }
 
-"Starting winget upgrades" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Starting winget upgrades"
 winget upgrade --all --silent --disable-interactivity *>&1 |
     Tee-Object -FilePath $log -Append
-"Completed winget updates at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Completed winget updates"

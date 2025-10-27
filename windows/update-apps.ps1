@@ -9,15 +9,16 @@ if (!(Test-Path -LiteralPath $LogFolder)) {
 }
 
 $log = Join-Path $LogFolder ('update-apps-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
-"Starting update-apps at $(Get-Date -Format s) using pwsh $($PSVersionTable.PSVersion)" |
-    Tee-Object -FilePath $log -Append | Out-Null
+. (Join-Path $PSScriptRoot 'Write-Log.ps1')
+Set-LogFile -Path $log
+Write-Log "Starting update-apps using pwsh $($PSVersionTable.PSVersion)"
 
-"Invoking Update-Choco" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Invoking Update-Choco"
 & (Join-Path $PSScriptRoot 'Update-Choco.ps1') -LogFolder $LogFolder
-"Completed Update-Choco" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Completed Update-Choco"
 
-"Invoking Update-Winget" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Invoking Update-Winget"
 & (Join-Path $PSScriptRoot 'Update-Winget.ps1') -LogFolder $LogFolder
-"Completed Update-Winget" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Completed Update-Winget"
 
-"Completed update-apps at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null
+Write-Log "Completed update-apps"

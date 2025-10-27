@@ -13,6 +13,7 @@ New-Item -Path $destLogs -ItemType Directory -Force | Out-Null
 $sourceDir = $PSScriptRoot
 $scripts = @(
     'cleanup-disk.ps1',
+    'Write-Log.ps1',
     'Update-Apps.ps1',
     'Update-Winget.ps1',
     'Update-Choco.ps1'
