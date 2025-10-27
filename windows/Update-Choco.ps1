@@ -1,17 +1,26 @@
 Param(
-    [Parameter(Mandatory = $true)]
-    [ValidateNotNullOrEmpty()]
-    [string]$LogFolder
+    [Parameter()][string]$LogFile
 )
 
 $ErrorActionPreference = 'Stop'
 
-if (!(Test-Path -LiteralPath $LogFolder)) {
-    New-Item -ItemType Directory -Path $LogFolder | Out-Null
+. (Join-Path $PSScriptRoot 'Write-Log.ps1')
+
+# Resolve target log path
+if ($PSBoundParameters.ContainsKey('LogFile') -and -not [string]::IsNullOrWhiteSpace($LogFile)) {
+    $log = $LogFile
+    $logDir = Split-Path -Path $log -Parent
+    if ($logDir -and -not (Test-Path -LiteralPath $logDir)) {
+        New-Item -ItemType Directory -Path $logDir | Out-Null
+    }
+} else {
+    $defaultFolder = Join-Path $PSScriptRoot 'logs'
+    if (!(Test-Path -LiteralPath $defaultFolder)) {
+        New-Item -ItemType Directory -Path $defaultFolder | Out-Null
+    }
+    $log = Join-Path $defaultFolder ('update-apps-choco-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
 }
 
-$log = Join-Path $LogFolder ('update-apps-choco-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
-. (Join-Path $PSScriptRoot 'Write-Log.ps1')
 Set-LogFile -Path $log
 Write-Log "Starting choco"
 

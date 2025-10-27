@@ -14,11 +14,11 @@ Set-LogFile -Path $log
 Write-Log "Starting update-apps using pwsh $($PSVersionTable.PSVersion)"
 
 Write-Log "Invoking Update-Choco"
-& (Join-Path $PSScriptRoot 'Update-Choco.ps1') -LogFolder $LogFolder
+& (Join-Path $PSScriptRoot 'Update-Choco.ps1') -LogFile $log
 Write-Log "Completed Update-Choco"
 
 Write-Log "Invoking Update-Winget"
-& (Join-Path $PSScriptRoot 'Update-Winget.ps1') -LogFolder $LogFolder
+& (Join-Path $PSScriptRoot 'Update-Winget.ps1') -LogFile $log
 Write-Log "Completed Update-Winget"
 
 Write-Log "Completed update-apps"
