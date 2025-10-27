@@ -11,7 +11,12 @@ New-Item -Path $destLogs -ItemType Directory -Force | Out-Null
 
 # Copy scripts from repo to C:\Scheduled
 $sourceDir = $PSScriptRoot
-$scripts = @('cleanup-disk.ps1', 'Update-Apps.ps1', 'Update-Winget.ps1', 'Update-Choco.ps1')
+$scripts = @(
+    'cleanup-disk.ps1',
+    'Update-Apps.ps1',
+    'Update-Winget.ps1',
+    'Update-Choco.ps1'
+)
 foreach ($script in $scripts) {
     Copy-Item -Path (Join-Path $sourceDir $script) -Destination (Join-Path $destRoot $script) -Force
 }
