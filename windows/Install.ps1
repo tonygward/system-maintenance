@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-$destRoot = 'C:\\Scheduled'
+$destRoot = 'C:\Scheduled'
 $destLogs = Join-Path $destRoot 'logs'
 
 # Create target folders
@@ -44,7 +44,7 @@ Register-ScheduledTask -TaskName 'Cleanup Disk' -TaskPath $taskPath -InputObject
 
 # Update Apps task (runs Update-Apps.ps1 as the entry point)
 $pwshExe = (Get-Command 'pwsh.exe' -ErrorAction Stop).Source
-$updateArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$destRoot\Update-Apps.ps1`" *>> `"$destLogs\installer-update-apps.log`""
+$updateArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$destRoot\Update-Apps.ps1`""
 $updateAction = New-ScheduledTaskAction -Execute $pwshExe -Argument $updateArgs
 $updateAction.WorkingDirectory = $destRoot
 $updateTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '8:00 AM'

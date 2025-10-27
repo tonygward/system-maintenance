@@ -1,17 +1,16 @@
-# Fail fast on errors (guard direct command-not-found by checking first)
-$ErrorActionPreference = 'Stop'
-
-param(
+Param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$LogFolder
 )
 
+$ErrorActionPreference = 'Stop'
+
 if (!(Test-Path -LiteralPath $LogFolder)) {
     New-Item -ItemType Directory -Path $LogFolder | Out-Null
 }
 
-$log = Join-Path $LogFolder ('winget-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
+$log = Join-Path $LogFolder ('update-apps-winget-' + (Get-Date -Format yyyyMMdd-HHmmss) + '.log')
 "Starting winget at $(Get-Date -Format s)" | Tee-Object -FilePath $log -Append | Out-Null
 
 try {
