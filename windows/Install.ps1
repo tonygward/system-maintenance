@@ -33,7 +33,7 @@ $rootFolder = $scheduleService.GetFolder('\')
 try { $null = $rootFolder.GetFolder('System Maintenance') } catch { $null = $rootFolder.CreateFolder('System Maintenance') }
 
 $currentUser = ([System.Security.Principal.WindowsIdentity]::GetCurrent()).Name
-$principal = New-ScheduledTaskPrincipal -UserId $currentUser -LogonType Interactive -RunLevel Highest
+$principal = New-ScheduledTaskPrincipal -UserId $currentUser -LogonType S4U -RunLevel Highest
 $settings  = New-ScheduledTaskSettingsSet -Compatibility Win8 -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -Hidden
 
 # Cleanup Disk task (runs cleanmgr directly)
