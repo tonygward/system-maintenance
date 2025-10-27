@@ -38,8 +38,8 @@ $cleanupTask = New-ScheduledTask -Action $cleanupAction -Trigger $cleanupTrigger
 Register-ScheduledTask -TaskName 'Cleanup Disk' -TaskPath $taskPath -InputObject $cleanupTask -Force | Out-Null
 
 # Update Apps task (runs update-apps.ps1 as the entry point)
-$pwshExe = 'pwsh.exe'
-$updateArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$destRoot\update-apps.ps1`" -LogFolder `"$destLogs`""
+$pwshExe = (Get-Command 'pwsh.exe' -ErrorAction Stop).Source
+$updateArgs = "-NoLogo -NoProfile -NonInteractive -File `"$destRoot\update-apps.ps1`" -LogFolder `"$destLogs`""
 $updateAction = New-ScheduledTaskAction -Execute $pwshExe -Argument $updateArgs
 $updateAction.WorkingDirectory = $destRoot
 $updateTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '8:00 AM'
