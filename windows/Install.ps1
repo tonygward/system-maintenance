@@ -11,7 +11,7 @@ New-Item -Path $destLogs -ItemType Directory -Force | Out-Null
 
 # Copy scripts from repo to C:\Scheduled
 $sourceDir = $PSScriptRoot
-$scripts = @('cleanup-disk.ps1', 'update-apps.ps1', 'Update-Winget.ps1', 'Update-Choco.ps1')
+$scripts = @('cleanup-disk.ps1', 'Update-Apps.ps1', 'Update-Winget.ps1', 'Update-Choco.ps1')
 foreach ($script in $scripts) {
     Copy-Item -Path (Join-Path $sourceDir $script) -Destination (Join-Path $destRoot $script) -Force
 }
@@ -37,9 +37,9 @@ $cleanupTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '6:00 
 $cleanupTask = New-ScheduledTask -Action $cleanupAction -Trigger $cleanupTrigger -Principal $principal -Settings $settings -Description 'Cleans up disk space'
 Register-ScheduledTask -TaskName 'Cleanup Disk' -TaskPath $taskPath -InputObject $cleanupTask -Force | Out-Null
 
-# Update Apps task (runs update-apps.ps1 as the entry point)
+# Update Apps task (runs Update-Apps.ps1 as the entry point)
 $pwshExe = (Get-Command 'pwsh.exe' -ErrorAction Stop).Source
-$updateArgs = "-NoLogo -NoProfile -NonInteractive -File `"$destRoot\update-apps.ps1`" -LogFolder `"$destLogs`""
+$updateArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$destRoot\Update-Apps.ps1`" *>> `"$destLogs\installer-update-apps.log`""
 $updateAction = New-ScheduledTaskAction -Execute $pwshExe -Argument $updateArgs
 $updateAction.WorkingDirectory = $destRoot
 $updateTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '8:00 AM'

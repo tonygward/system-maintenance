@@ -8,7 +8,7 @@ Both tasks run under the SYSTEM account from `C:\Scheduled`.
 
 **Install**
 - Run from an elevated PowerShell prompt:
-  - `powershell -ExecutionPolicy Bypass -File windows\install-system-maintenance.ps1`
+  - `pwsh -ExecutionPolicy Bypass -File windows\Install.ps1`
 
 <hr>
 
