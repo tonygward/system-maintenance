@@ -16,7 +16,9 @@ $scripts = @(
     'Write-Log.ps1',
     'Update-Apps.ps1',
     'Update-Winget.ps1',
-    'Update-Choco.ps1'
+    'Update-Choco.ps1',
+    'Check-Smartctl.ps1',
+    'Check-Smartctl.json'
 )
 foreach ($script in $scripts) {
     Copy-Item -Path (Join-Path $sourceDir $script) -Destination (Join-Path $destRoot $script) -Force
@@ -51,5 +53,13 @@ $updateAction.WorkingDirectory = $destRoot
 $updateTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '8:00 AM'
 $updateTask = New-ScheduledTask -Action $updateAction -Trigger $updateTrigger -Principal $principal -Settings $settings -Description 'Updates installed applications'
 Register-ScheduledTask -TaskName 'Update Apps' -TaskPath $taskPath -InputObject $updateTask -Force | Out-Null
+
+# Check SMART status task (runs Check-Smartctl.ps1)
+$smartctlArgs = "-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$destRoot\Check-Smartctl.ps1`""
+$smartctlAction = New-ScheduledTaskAction -Execute $pwshExe -Argument $smartctlArgs
+$smartctlAction.WorkingDirectory = $destRoot
+$smartctlTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Friday -At '9:00 AM'
+$smartctlTask = New-ScheduledTask -Action $smartctlAction -Trigger $smartctlTrigger -Principal $principal -Settings $settings -Description 'Checks SMART disk health with smartctl'
+Register-ScheduledTask -TaskName 'Check SMARTCTL' -TaskPath $taskPath -InputObject $smartctlTask -Force | Out-Null
 
 Write-Host 'Done. Tasks created under Task Scheduler folder: System Maintenance'
