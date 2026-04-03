@@ -21,4 +21,8 @@ Write-Log "Invoking Update-Winget"
 & (Join-Path $PSScriptRoot 'Update-Winget.ps1') -LogFile $log
 Write-Log "Completed Update-Winget"
 
+Write-Log "Invoking Update-Windows"
+& (Join-Path $PSScriptRoot 'Update-Windows.ps1') -LogFile $log
+Write-Log "Completed Update-Windows"
+
 Write-Log "Completed update-apps"
